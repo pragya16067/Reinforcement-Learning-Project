@@ -7,12 +7,13 @@ from Environments.GridWorld.GridEnv import GridEnv
 
 class PrioritizedSweeping():
 
-    def __init__(self, gamma, theta, n, alpha):
-        self.env = GridEnv()
+    def __init__(self, gamma, theta, n, alpha, epsilon):
+        self.env = GridEnv()                  # Change to gym.make() later
         self.gamma = gamma
         self.theta = theta
         self.n_planning_steps = n
         self.alpha = alpha
+        self.epsilon = epsilon
         self.Q_value = np.random.random([self.env.n_states, self.env.n_actions])
         self.PriorityQ = PriorityQueue()
         self.Predecessors = dict()
@@ -24,29 +25,43 @@ class PrioritizedSweeping():
         else:
             self.Predecessors[s_prime] = [(s,a)]
 
-    def get_action_from_policy(self, state):
-        return np.argmax(self.Q_value[state])
+    def choose_best_action(self, state):
+        maxQ = np.max(self.Q_value[state])
+        maxIdxs = [i for i, val in enumerate(self.Q_value[state]) if(val == maxQ)]
+        return np.random.choice(maxIdxs)
+
+    def get_action_from_e_greedy_policy(self, state):
+        prob = np.random.rand()
+        actions = self.env.actions
+        if(prob < self.epsilon):
+            return np.random.choice(actions)
+        else:
+            return self.choose_best_action(state)
+
 
     def prioritizedSweepQLearning(self, n_iters):
+        n_updates = 0
         for iter in range(n_iters):
             s = self.env.state
             if(s == self.env.terminal_state):
+                print("An episode finished")
                 s = self.env.reset()
 
-            a = self.get_action_from_policy(s) # Define Deterministic Policy
+            a = self.get_action_from_e_greedy_policy(s) # Define Epsilon-Greedy Stochastic Policy
             s_prime, r, done, _ = self.env.step(a)
             self.Model[(s, a)] = [s_prime, r]
             self.updatePredecessors(s, a, s_prime)
 
             priority = abs(r + self.gamma * np.max(self.Q_value[s_prime]) - self.Q_value[s][a])
             if(priority > self.theta):
-                self.PriorityQ.put((-priority, [s, a])) #Insert negative priority since this is a minQueue
+                self.PriorityQ.put((-priority, [s, a])) #Insert negative priority since python by default has a minQueue
 
             for i in range(self.n_planning_steps):
                 if(not self.PriorityQ.empty()):
                     p, [s, a] = self.PriorityQ.get()
                     s_prime, r = self.Model[(s, a)]
                     self.Q_value[s][a] = self.Q_value[s][a] + self.alpha*(r + self.gamma * np.max(self.Q_value[s_prime]) - self.Q_value[s][a])
+                    n_updates += 1
 
                     # Loop over all State,Actions that are predicted to reach s
                     if(s in self.Predecessors.keys()):
@@ -58,8 +73,10 @@ class PrioritizedSweeping():
                 else:
                     break
 
-            print("Deterministic Policy Learned in "+str(iter)+"th iteration:")
+            print("Policy Learned in "+str(iter)+"th iteration:")
             self.prettyPrintPolicy()
+
+        return n_updates
 
 
     def prettyPrintPolicy(self):
@@ -84,5 +101,6 @@ class PrioritizedSweeping():
             print()
 
 if __name__=='__main__':
-    prSweeping = PrioritizedSweeping(gamma=0.9, theta=0.00001, n=5, alpha=0.6)
-    prSweeping.prioritizedSweepQLearning(n_iters=10000)
+    prSweeping = PrioritizedSweeping(gamma=0.9, theta=0.00001, n=10, alpha=0.6, epsilon=0.15)
+    n_updates = prSweeping.prioritizedSweepQLearning(n_iters=10000)
+    print("The Number of updates required for discovering the Optimal Policy are "+str(n_updates))

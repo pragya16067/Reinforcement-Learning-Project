@@ -13,7 +13,9 @@ class GridEnv(gym.Env):
         # Define the Action Space
         self.action_space = spaces.Discrete(4)
         self.n_actions = 4
-        self.actions = ["up", "down", "left", "right"]
+        self.actions = [0, 1, 2, 3] # Encoding for values ["up", "down", "left", "right"]
+
+        # Define the transition probabilities
         self.success_rate = 0.9
         self.prob_veerHorizontal = 0.05
         
