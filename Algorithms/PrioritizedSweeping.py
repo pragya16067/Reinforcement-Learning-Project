@@ -1,13 +1,13 @@
 # import all dependencies
 import numpy as np
-import gym
-# Instantiate a Gridworld environment to perform Prioritized Sweeping
 from queue import PriorityQueue
 from Environments.GridWorld.GridEnv import GridEnv
+import matplotlib.pyplot as plt
 
 class PrioritizedSweeping():
 
     def __init__(self, gamma, theta, n, alpha, epsilon):
+        # Instantiate a Gridworld environment to perform Prioritized Sweeping
         self.env = GridEnv()                  # Change to gym.make() later
         self.gamma = gamma
         self.theta = theta
@@ -40,10 +40,18 @@ class PrioritizedSweeping():
 
 
     def prioritizedSweepQLearning(self, n_iters):
+        n_updates_list = []
+        n_episodes_list = []
+        mse_list = []
+
         n_updates = 0
+        n_episodes = 0
         for iter in range(n_iters):
             s = self.env.state
             if(s == self.env.terminal_state):
+                n_episodes += 1
+                n_episodes_list.append(n_episodes)
+                n_updates_list.append(n_updates)
                 print("An episode finished")
                 s = self.env.reset()
 
@@ -75,9 +83,19 @@ class PrioritizedSweeping():
 
             print("Policy Learned in "+str(iter)+"th iteration:")
             self.prettyPrintPolicy()
+            mse_list.append(self.getMSE())
 
-        return n_updates
+        return n_updates_list, n_episodes_list, mse_list
 
+    def getMSE(self):
+        mse = 0
+        G = self.env.grid_size
+        for i in range(G):
+            for j in range(G):
+                s = i*G + j
+                mse += 1/self.env.n_states * np.absolute(np.sum(self.Q_value[s]) - self.env.optimalValueFunction[i][j])
+
+        return mse
 
     def prettyPrintPolicy(self):
         m, m = np.shape(self.env.grid)
@@ -100,7 +118,20 @@ class PrioritizedSweeping():
                         print(str("\u2192"), end=" ")
             print()
 
+    def plotGraph(self, title, x, y, xLabel, yLabel):
+        plt.figure()
+        plt.plot(x, y)
+        plt.title(title)
+        plt.xlabel(xLabel)
+        plt.ylabel(yLabel)
+        plt.show()
+
 if __name__=='__main__':
     prSweeping = PrioritizedSweeping(gamma=0.9, theta=0.00001, n=10, alpha=0.6, epsilon=0.15)
-    n_updates = prSweeping.prioritizedSweepQLearning(n_iters=10000)
-    print("The Number of updates required for discovering the Optimal Policy are "+str(n_updates))
+    n_iters = 1000
+    n_updates_list, n_episodes_list, mse_list = prSweeping.prioritizedSweepQLearning(n_iters=n_iters)
+    #print("The Number of updates required for discovering the Optimal Policy are "+str(n_updates_list[-1]))
+
+    #prSweeping.plotGraph("", n_episodes_list, n_updates_list, "", "")
+    print(mse_list)
+    prSweeping.plotGraph("MSE vs #Iterations", np.arange(n_iters), mse_list, "No. of Iterations", "MSE with Optimal Value function")
