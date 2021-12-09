@@ -1,8 +1,17 @@
 # import all dependencies
 import numpy as np
 from queue import PriorityQueue
+
+import sys
+  
+# adding Environments to the system path
+sys.path.insert(0, '../.')
+
 from Environments.GridWorld.GridEnv import GridEnv
 import matplotlib.pyplot as plt
+
+
+  
 
 class PrioritizedSweeping():
 
@@ -48,10 +57,20 @@ class PrioritizedSweeping():
         n_episodes = 0
         for iter in range(n_iters):
             s = self.env.state
+            if iter % 250 == 0:
+                # print("Iteration: ", iter, "Learning Rate: ", self.alpha)
+                if self.alpha > 0.005:
+                    self.alpha = 0.75 * self.alpha
+                if self.epsilon > 0.1:
+                    self.epsilon = self.epsilon - 0.05
+                else:
+                    self.epsilon = 0.5 * self.epsilon
+
             if(s == self.env.terminal_state):
                 n_episodes += 1
                 n_episodes_list.append(n_episodes)
                 n_updates_list.append(n_updates)
+                n_updates = 0
                 print("An episode finished")
                 s = self.env.reset()
 
@@ -127,11 +146,14 @@ class PrioritizedSweeping():
         plt.show()
 
 if __name__=='__main__':
-    prSweeping = PrioritizedSweeping(gamma=0.9, theta=0.00001, n=10, alpha=0.6, epsilon=0.15)
-    n_iters = 1000
+    np.random.seed(10)
+    prSweeping = PrioritizedSweeping(gamma=0.9, theta=0.00001, n=10, alpha=0.2, epsilon=0.3)
+    n_iters = 3000
     n_updates_list, n_episodes_list, mse_list = prSweeping.prioritizedSweepQLearning(n_iters=n_iters)
     #print("The Number of updates required for discovering the Optimal Policy are "+str(n_updates_list[-1]))
 
-    #prSweeping.plotGraph("", n_episodes_list, n_updates_list, "", "")
-    print(mse_list)
-    prSweeping.plotGraph("MSE vs #Iterations", np.arange(n_iters), mse_list, "No. of Iterations", "MSE with Optimal Value function")
+    prSweeping.plotGraph("", n_episodes_list, n_updates_list, "Episodes", "# of Updates")
+    # print(mse_list)
+    # print(n_updates_list)
+    # print(n_episodes_list)
+    prSweeping.plotGraph("MSE vs # of Iterations", np.arange(n_iters), mse_list, "No. of Iterations", "MSE with Optimal Value function")
