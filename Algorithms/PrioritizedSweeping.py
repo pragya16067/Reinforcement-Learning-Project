@@ -1,13 +1,14 @@
 # import all dependencies
 import numpy as np
 from queue import PriorityQueue
-
+import gym
 import sys
   
 # adding Environments to the system path
 sys.path.insert(0, '../.')
 
 from Environments.GridWorld.GridEnv import GridEnv
+from Environments.MountainCar.MCEnv import MCEnv
 import matplotlib.pyplot as plt
 
 
@@ -15,15 +16,15 @@ import matplotlib.pyplot as plt
 
 class PrioritizedSweeping():
 
-    def __init__(self, gamma, theta, n, alpha, epsilon):
+    def __init__(self, env, gamma, theta, n, alpha, epsilon):
         # Instantiate a Gridworld environment to perform Prioritized Sweeping
-        self.env = GridEnv()                  # Change to gym.make() later
+        self.env = env
         self.gamma = gamma
         self.theta = theta
         self.n_planning_steps = n
         self.alpha = alpha
         self.epsilon = epsilon
-        self.Q_value = np.random.random([self.env.n_states, self.env.n_actions])
+        self.Q_value = np.random.random([self.env.n_states, self.env.action_space.n])
         self.PriorityQ = PriorityQueue()
         self.Predecessors = dict()
         self.Model = dict()
@@ -56,7 +57,7 @@ class PrioritizedSweeping():
         n_updates = 0
         n_episodes = 0
         for iter in range(n_iters):
-            s = self.env.state
+            s = self.env.reset()
             if iter % 250 == 0:
                 # print("Iteration: ", iter, "Learning Rate: ", self.alpha)
                 if self.alpha > 0.005:
@@ -66,7 +67,11 @@ class PrioritizedSweeping():
                 else:
                     self.epsilon = 0.5 * self.epsilon
 
-            if(s == self.env.terminal_state):
+
+            a = self.get_action_from_e_greedy_policy(s) # Define Epsilon-Greedy Stochastic Policy
+            s_prime, r, done, _ = self.env.step(a)
+
+            if(done):
                 n_episodes += 1
                 n_episodes_list.append(n_episodes)
                 n_updates_list.append(n_updates)
@@ -74,8 +79,6 @@ class PrioritizedSweeping():
                 print("An episode finished")
                 s = self.env.reset()
 
-            a = self.get_action_from_e_greedy_policy(s) # Define Epsilon-Greedy Stochastic Policy
-            s_prime, r, done, _ = self.env.step(a)
             self.Model[(s, a)] = [s_prime, r]
             self.updatePredecessors(s, a, s_prime)
 
@@ -146,14 +149,31 @@ class PrioritizedSweeping():
         plt.show()
 
 if __name__=='__main__':
+    
+    # Q-Learning with Prioritized Sweeping for 687-Grid World
     np.random.seed(10)
-    prSweeping = PrioritizedSweeping(gamma=0.9, theta=0.00001, n=10, alpha=0.2, epsilon=0.3)
+    # env_grid = GridEnv()
+    # prSweeping = PrioritizedSweeping(env_grid, gamma=0.9, theta=0.00001, n=10, alpha=0.2, epsilon=0.3)
     n_iters = 3000
+    # n_updates_list, n_episodes_list, mse_list = prSweeping.prioritizedSweepQLearning(n_iters=n_iters)
+    # #print("The Number of updates required for discovering the Optimal Policy are "+str(n_updates_list[-1]))
+
+    # # Plot for number of updates per episode
+    # prSweeping.plotGraph("Updates per Episode (Gridworld)", n_episodes_list, n_updates_list, "Episodes", "# of Updates")
+    # # Plot for MSE
+    # prSweeping.plotGraph("MSE vs # of Iterations (Gridworld)", np.arange(n_iters), mse_list, "No. of Iterations", "MSE with Optimal Value function")
+
+
+    # Q-Learning with Prioritized Sweeping for Mountain Car
+    env_mc = MCEnv()
+    env_mc._max_episode_steps = 2000
+
+    prSweeping = PrioritizedSweeping(env_mc, gamma=0.9, theta=0.00001, n=10, alpha=0.2, epsilon=0.3)
     n_updates_list, n_episodes_list, mse_list = prSweeping.prioritizedSweepQLearning(n_iters=n_iters)
     #print("The Number of updates required for discovering the Optimal Policy are "+str(n_updates_list[-1]))
 
-    prSweeping.plotGraph("", n_episodes_list, n_updates_list, "Episodes", "# of Updates")
-    # print(mse_list)
-    # print(n_updates_list)
-    # print(n_episodes_list)
-    prSweeping.plotGraph("MSE vs # of Iterations", np.arange(n_iters), mse_list, "No. of Iterations", "MSE with Optimal Value function")
+    # Plot for number of updates per episode
+    prSweeping.plotGraph("Updates per Episode (Mountain Car)", n_episodes_list, n_updates_list, "Episodes", "# of Updates")
+    # Plot for MSE
+    prSweeping.plotGraph("MSE vs # of Iterations (Mountain Car)", np.arange(n_iters), mse_list, "No. of Iterations", "MSE with Optimal Value function")
+
