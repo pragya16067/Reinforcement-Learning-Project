@@ -174,7 +174,7 @@ if __name__=='__main__':
     env_mc = MCEnv()
     env_mc._max_episode_steps = 3000
 
-    prSweeping = PrioritizedSweeping(env_mc, gamma=0.9, theta=0.00001, n=5, alpha=0.7, epsilon=0)
+    prSweeping = PrioritizedSweeping(env_mc, gamma=0.9, theta=0.00001, n=5, alpha=0.05, epsilon=0.25)
     n_updates_list, n_episodes_list, _, reward_list = prSweeping.prioritizedSweepQLearning(n_iters=env_mc._max_episode_steps)
     #print("The Number of updates required for discovering the Optimal Policy are "+str(n_updates_list[-1]))
 

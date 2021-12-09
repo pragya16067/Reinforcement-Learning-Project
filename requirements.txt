@@ -1,0 +1,8 @@
+gym
+pyglet
+pytorch
+numpy
+matplotlib
+pandas
+sklearn
+seaborn

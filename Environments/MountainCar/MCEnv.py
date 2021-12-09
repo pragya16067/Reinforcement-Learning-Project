@@ -43,7 +43,7 @@ class MCEnv(MountainCarEnv):
     def getDiscreteState(self, s):
         x, v = s
         parts = self.partitions
-        vel_parts = 2
+        vel_parts = 3
         range_dict_pos = self.split_pos_space(parts)
         range_dict_vel = self.split_vel_space(vel_parts)
         state = self.get_state(range_dict_pos, range_dict_vel, x, v)
