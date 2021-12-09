@@ -10,6 +10,7 @@ class GridEnv(gym.Env):
     def __init__(self, size=5,
                  obstacleMap = [[0,0,0,0,0], [0,0,0,0,0], [0,0,1,0,0], [0,0,1,0,0], [0,0,0,0,0]],
                  waterMap = [[0,0,0,0,0], [0,0,0,0,0], [0,0,0,0,0], [0,0,0,0,0], [0,0,1,0,0]]):
+        self.name = "Gridworld"
         # Define the Action Space
         self.action_space = spaces.Discrete(4)
         self.n_actions = 4
