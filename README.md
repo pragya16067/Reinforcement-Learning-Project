@@ -1,4 +1,4 @@
-# 687-Final-Project
+# Reinforcement Learning
 A repo for the project of course Reinforcement Learning (COMPSCI-687). This includes the following algorithms implemented for toy domains from open AI gym.
 
 ### Project structure
