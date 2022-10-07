@@ -1,6 +1,8 @@
 # Reinforcement Learning
 A repo for the project of course Reinforcement Learning (COMPSCI-687). This includes the following algorithms implemented for toy domains from open AI gym.
 
+For a in-depth explaination, please refer to https://github.com/pragya16067/Reinforcement-Learning-Project/blob/main/RL_FinalProjectReport.pdf
+
 ### Project structure
 
 #### Algorithms
